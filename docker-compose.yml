@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ursh
+      POSTGRES_USER: ursh
+      POSTGRES_PASSWORD: ursh
+    ports:
+      - "5432:5432"
+    volumes:
+      - ursh_pg:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg2://ursh:ursh@postgres:5432/ursh
+      JWT_SECRET_KEY: CHANGE_ME_SUPER_SECRET
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+
+  frontend:
+    build: ./frontend
+    environment:
+      API_URL: http://backend:8000
+    ports:
+      - "8501:8501"
+    depends_on:
+      - backend
+
+volumes:
+  ursh_pg:
