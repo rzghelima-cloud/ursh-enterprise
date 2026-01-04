@@ -21,10 +21,13 @@ def _render_team(team: dict, members: list[dict]):
 **الميادين:** {team.get('domains','-')}  
 **الكلمات المفتاحية:** {team.get('keywords','-')}"""
     )
+
     st.markdown("**التعريف:**")
     st.write(team.get("description") or "لا يوجد وصف")
+
     st.markdown("**البرنامج العلمي:**")
     st.write(team.get("program_desc") or "لم يتم إدخال وصف البرنامج العلمي بعد.")
+
     st.markdown("---")
     st.markdown("### 👥 القوائم الاسمية")
 
@@ -34,6 +37,7 @@ def _render_team(team: dict, members: list[dict]):
         "affiliate": [],
         "associate": [],
     }
+
     for m in members or []:
         k = m.get("member_type") or "permanent"
         if k not in buckets:
@@ -47,6 +51,7 @@ def _render_team(team: dict, members: list[dict]):
         ("ملحق بحث", "affiliate", "🤝"),
         ("عضو مشارك", "associate", "🌍"),
     ]
+
     for col, (title, key, icon) in zip(cols, groups):
         with col:
             st.markdown(f"#### {icon} {title}")
@@ -77,7 +82,6 @@ def _render_department(full: dict, only_team_id: int | None = None):
         if only_team_id is not None and team.get("id") != only_team_id:
             continue
 
-        # ✅ Expander واحد فقط للفرق (مسموح)
         with st.expander(f"الفرقة: {team.get('name','')}", expanded=False):
             _render_team(team, members)
 
@@ -94,23 +98,16 @@ def render():
         return
 
     if role == "admin":
-        depts = api_client.departments(token=None)  # public endpoint
+        # endpoint عام (لا يحتاج توكن)
+        depts = api_client.departments(token=None)
         if not depts:
             st.info("لا توجد أقسام.")
             return
 
-        # ✅ قابل للطي بدون nested expanders: استخدم Tabs للأقسام
-        labels = []
-        dept_ids = []
         for d in depts:
-            labels.append(d.get("name_ar") or f"Department {d.get('id')}")
-            dept_ids.append(int(d["id"]))
-
-        tabs = st.tabs([f"📂 {x}" for x in labels])
-
-        for tab, dept_id in zip(tabs, dept_ids):
-            with tab:
-                full = api_client.department_full(token, dept_id)
+            label = d.get("name_ar") or f"Department {d.get('id')}"
+            with st.expander(label, expanded=False):
+                full = api_client.department_full(token, int(d["id"]))
                 _render_department(full)
 
     elif role == "dept_head":
@@ -124,6 +121,7 @@ def render():
     elif role in ("leader", "researcher"):
         dept_id = me.get("department_id")
         team_id = me.get("team_id")
+
         if not dept_id:
             st.warning("غير مرتبط بقسم.")
             return
