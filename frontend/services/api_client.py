@@ -1,7 +1,7 @@
 import os
 import requests
 
-API_URL = os.getenv("API_URL", "https://ursh-enterprise.onrender.com/")
+API_URL=https://ursh-enterprise.onrender.com
 
 class APIError(Exception):
     pass
